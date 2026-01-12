@@ -158,7 +158,17 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
     // Custom tools for WorkTrunk operations
     tool: {
       "worktrunk-list": tool({
-        description: "List all WorkTrunk worktrees with their status. Supports JSON format for programmatic access. Use --full --branches to show PR/CI status across all branches including those without worktrees.",
+        description: `List all WorkTrunk worktrees with their status.
+
+Examples:
+- worktrunk-list() - List all worktrees in text format
+- worktrunk-list({format: "json"}) - Get structured JSON output for parsing
+- worktrunk-list({full: true, branches: true}) - Show PR/CI status for all branches including those without worktrees
+
+Use cases:
+- Check what branches have active worktrees
+- Monitor CI status across all branches (use --full --branches)
+- Get structured data for scripts (use format: "json")`,
         args: {
           format: tool.schema.string().optional().describe("Output format: 'text' (default) or 'json' for structured output"),
           full: tool.schema.boolean().optional().describe("Show full details including PR/CI status"),
@@ -194,7 +204,18 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
       }),
 
       "worktrunk-switch": tool({
-        description: "Switch to a different WorkTrunk worktree/branch. Supports shortcuts: '@' for current branch, '-' for previous worktree.",
+        description: `Switch to a different WorkTrunk worktree/branch.
+
+Examples:
+- worktrunk-switch({branch: "feature/api"}) - Switch to feature/api branch
+- worktrunk-switch({branch: "@"}) - Switch to current branch (refresh)
+- worktrunk-switch({branch: "-"}) - Switch to previous worktree
+
+Shortcuts:
+- "@" - Current branch (useful for refreshing)
+- "-" - Previous worktree (quick toggle)
+
+Use when you need to change context to work on a different branch.`,
         args: {
           branch: tool.schema.string().describe("Branch name to switch to, or '@' for current branch, or '-' for previous worktree"),
         },
@@ -224,7 +245,12 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
       }),
 
       "worktrunk-status": tool({
-        description: "Get current WorkTrunk status for the active branch",
+        description: `Get current WorkTrunk status for the active branch.
+
+Example:
+- worktrunk-status() - Shows status of the current branch
+
+Use this to check the current branch's worktree status, including any status markers set by the plugin (🤖 working, 💬 waiting).`,
         args: {},
         async execute(args, ctx) {
           if (!(await isWorkTrunkInstalled())) {
@@ -250,7 +276,22 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
       }),
 
       "worktrunk-create": tool({
-        description: "Create a new WorkTrunk worktree for a branch. Supports stacked branches with --base=@ to branch from current HEAD. Supports shortcuts: '@' for current branch.",
+        description: `Create a new WorkTrunk worktree for a branch.
+
+Examples:
+- worktrunk-create({branch: "feature/new-feature"}) - Create worktree from default branch
+- worktrunk-create({branch: "feature/part2", base: "@"}) - Create stacked branch from current HEAD
+- worktrunk-create({branch: "feature/part2", base: "feature/part1"}) - Create stacked branch from another branch
+- worktrunk-create({branch: "@"}) - Create worktree for current branch
+
+Stacked branches:
+- Use base: "@" to branch from current HEAD (enables incremental feature development)
+- Chain multiple stacked branches: part1 -> part2 -> part3
+
+Shortcuts:
+- "@" - Current branch name
+
+Use this when starting work on a new feature branch.`,
         args: {
           branch: tool.schema.string().describe("Branch name to create worktree for, or '@' for current branch"),
           base: tool.schema.string().optional().describe("Base branch or commit to branch from. Use '@' to branch from current HEAD (stacked branches)."),
@@ -291,7 +332,16 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
       }),
 
       "worktrunk-remove": tool({
-        description: "Remove a WorkTrunk worktree. Supports shortcuts: '@' for current worktree.",
+        description: `Remove a WorkTrunk worktree.
+
+Examples:
+- worktrunk-remove({branch: "feature/old"}) - Remove worktree for feature/old
+- worktrunk-remove({branch: "@"}) - Remove current worktree
+
+Shortcuts:
+- "@" - Current worktree
+
+Use this to clean up worktrees when you're done with a branch. The plugin will automatically detect if you're no longer in a git repo after removal.`,
         args: {
           branch: tool.schema.string().describe("Branch name or worktree to remove, or '@' for current worktree"),
         },
@@ -325,7 +375,17 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
       }),
 
       "worktrunk-default-branch": tool({
-        description: "Get the default branch name dynamically. Works regardless of whether default is 'main' or 'master', enabling scripts to work on any repo.",
+        description: `Get the default branch name dynamically.
+
+Example:
+- worktrunk-default-branch() - Returns "main" or "master" or other default
+
+Use cases:
+- Scripts that need to work on any repo (main/master agnostic)
+- Switching to default branch: worktrunk-switch({branch: <default>})
+- Comparing against default branch
+
+This tool works regardless of whether the default is 'main', 'master', or any other name.`,
         args: {},
         async execute(args, ctx) {
           if (!(await isWorkTrunkInstalled())) {
