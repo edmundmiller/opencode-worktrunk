@@ -1,0 +1,19 @@
+{
+  "name": "opencode-worktrunk",
+  "version": "1.0.0",
+  "description": "OpenCode plugin for WorkTrunk integration - tracks session state and updates status markers",
+  "type": "module",
+  "main": "index.ts",
+  "dependencies": {
+    "@opencode-ai/plugin": "latest"
+  },
+  "keywords": [
+    "opencode",
+    "worktrunk",
+    "git",
+    "worktree",
+    "plugin"
+  ],
+  "author": "",
+  "license": "MIT"
+}
