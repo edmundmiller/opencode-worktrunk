@@ -108,10 +108,11 @@ describe("WorkTrunk shortcuts support", () => {
     const pluginModule = await import("../index.ts")
     const WorkTrunkPlugin = pluginModule.default
     
-    let capturedCommand: string[] = []
+    let capturedCommands: string[][] = []
     const mockContext: Partial<PluginContext> = {
       $: ((strings: TemplateStringsArray, ...values: any[]) => {
-        capturedCommand = [...strings.flatMap((s, i) => [s, values[i] || ""])].filter(Boolean)
+        const command = [...strings.flatMap((s, i) => [s, values[i] || ""])].filter(Boolean)
+        capturedCommands.push(command)
         return {
           quiet: () => Promise.resolve({ stdout: Buffer.from("Removed") }),
         }
@@ -133,8 +134,10 @@ describe("WorkTrunk shortcuts support", () => {
     const result = await removeTool.execute({ branch: "@" }, {} as any)
     expect(result).toBeDefined()
     expect(result).toContain("@")
-    const commandStr = capturedCommand.join(" ")
-    expect(commandStr).toContain("@")
+    // Check that wt remove command was called with @ (may also have git rev-parse calls for branch refresh)
+    const allCommands = capturedCommands.map(cmd => cmd.join(" ")).join(" ")
+    expect(allCommands).toContain("wt remove")
+    expect(allCommands).toContain("@")
   })
 
   test("worktrunk-remove supports branch name", async () => {

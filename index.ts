@@ -12,6 +12,8 @@ import { type Plugin, tool } from "@opencode-ai/plugin"
 const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
   let currentBranch: string | null = null
   let statusTimer: ReturnType<typeof setTimeout> | null = null
+  let branchCheckInterval: ReturnType<typeof setInterval> | null = null
+  let lastKnownBranch: string | null = null
 
   // Check if WorkTrunk is installed
   const isWorkTrunkInstalled = async (): Promise<boolean> => {
@@ -35,8 +37,17 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
 
   // Set WorkTrunk status marker
   const setStatusMarker = async (marker: string | null) => {
+    // Always refresh branch before setting marker to handle external changes
     if (!currentBranch) {
       currentBranch = await getCurrentBranch()
+      lastKnownBranch = currentBranch
+    } else {
+      // Quick check if branch changed
+      const current = await getCurrentBranch()
+      if (current !== currentBranch && current !== null) {
+        currentBranch = current
+        lastKnownBranch = current
+      }
     }
     
     if (!currentBranch) {
@@ -60,18 +71,46 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
     }
   }
 
-  // Debounced status update
+  // Debounced status update with improved debouncing strategy
   const updateStatus = (marker: string | null) => {
     if (statusTimer) {
       clearTimeout(statusTimer)
     }
+    // Use shorter debounce for status changes (200ms) to be more responsive
+    // but still batch rapid status changes
     statusTimer = setTimeout(() => {
       setStatusMarker(marker)
-    }, 500) // Debounce by 500ms
+    }, 200) // Debounce by 200ms for better responsiveness
+  }
+
+  // Check for branch changes that occur outside the plugin
+  const checkBranchChange = async () => {
+    const newBranch = await getCurrentBranch()
+    if (newBranch !== lastKnownBranch && newBranch !== null) {
+      // Branch changed externally - update tracking
+      currentBranch = newBranch
+      lastKnownBranch = newBranch
+      await client.app.log({
+        service: "opencode-worktrunk",
+        level: "info",
+        message: `Detected branch change: ${newBranch}`,
+      })
+    }
   }
 
   // Initialize - detect branch on startup
   currentBranch = await getCurrentBranch()
+  lastKnownBranch = currentBranch
+
+  // Set up periodic branch checking to detect external changes
+  // Check every 2 seconds for branch changes (e.g., manual git checkout)
+  if (currentBranch) {
+    branchCheckInterval = setInterval(() => {
+      checkBranchChange().catch(() => {
+        // Silently handle errors in background check
+      })
+    }, 2000)
+  }
 
   await client.app.log({
     service: "opencode-worktrunk",
@@ -169,12 +208,11 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
             // Update currentBranch if not using shortcuts
             if (args.branch !== "@" && args.branch !== "-") {
               currentBranch = args.branch
-            } else if (args.branch === "@") {
-              // Refresh current branch
-              currentBranch = await getCurrentBranch()
+              lastKnownBranch = args.branch
             } else {
-              // For '-', refresh current branch after switch
+              // For shortcuts, refresh current branch after switch
               currentBranch = await getCurrentBranch()
+              lastKnownBranch = currentBranch
             }
             updateStatus("💬")
             return `Switched to branch: ${args.branch}\n${result.stdout.toString()}`
@@ -194,9 +232,9 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
           }
           
           try {
-            if (!currentBranch) {
-              currentBranch = await getCurrentBranch()
-            }
+            // Always refresh branch to handle external changes
+            currentBranch = await getCurrentBranch()
+            lastKnownBranch = currentBranch
             
             if (!currentBranch) {
               return "Not in a git repository or no branch detected.\n\nTroubleshooting:\n- Ensure you're in a git repository: git rev-parse --git-dir\n- Check you're on a branch (not detached HEAD): git branch"
@@ -231,12 +269,14 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
             if (args.base) {
               const result = await $`wt switch --create ${args.branch} --base=${args.base}`.quiet()
               currentBranch = args.branch
+              lastKnownBranch = args.branch
               updateStatus("💬")
               const baseInfo = args.base === "@" ? "current HEAD" : args.base
               return `Created and switched to branch: ${args.branch} (from ${baseInfo})\n${result.stdout.toString()}`
             } else {
               const result = await $`wt switch --create ${args.branch}`.quiet()
               currentBranch = args.branch
+              lastKnownBranch = args.branch
               updateStatus("💬")
               return `Created and switched to branch: ${args.branch}\n${result.stdout.toString()}`
             }
@@ -262,9 +302,16 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
           
           try {
             const result = await $`wt remove ${args.branch}`.quiet()
-            // If removing current worktree, clear currentBranch
+            // If removing current worktree, clear currentBranch and refresh
             if (args.branch === "@" || args.branch === currentBranch) {
               currentBranch = null
+              lastKnownBranch = null
+              // Refresh to see if we're still in a repo
+              const newBranch = await getCurrentBranch()
+              if (newBranch) {
+                currentBranch = newBranch
+                lastKnownBranch = newBranch
+              }
             }
             return `Removed worktree: ${args.branch}\n${result.stdout.toString()}`
           } catch (error) {
