@@ -9,7 +9,8 @@ const mockShell = {
 describe("worktrunk-list tool", () => {
   test("worktrunk-list tool exists and has correct description", async () => {
     // This is a smoke test - verify the tool is properly exported
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     const mockContext: Partial<PluginContext> = {
       $: mockShell as any,
@@ -29,7 +30,8 @@ describe("worktrunk-list tool", () => {
   })
 
   test("worktrunk-list supports text format (default)", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let capturedCommand: string[] = []
     const mockShell = {
@@ -65,7 +67,8 @@ describe("worktrunk-list tool", () => {
   })
 
   test("worktrunk-list supports json format", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let capturedCommand: string[] = []
     const mockShell = {
@@ -105,7 +108,8 @@ describe("worktrunk-list tool", () => {
   })
 
   test("worktrunk-list handles errors gracefully", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     const mockShell = {
       quiet: () => {

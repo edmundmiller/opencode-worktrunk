@@ -3,7 +3,8 @@ import type { PluginContext } from "@opencode-ai/plugin"
 
 describe("WorkTrunk shortcuts support", () => {
   test("worktrunk-switch supports @ shortcut", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let switchCommands: string[] = []
     const mockContext: Partial<PluginContext> = {
@@ -42,7 +43,8 @@ describe("WorkTrunk shortcuts support", () => {
   })
 
   test("worktrunk-switch supports - shortcut", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let capturedCommand: string[] = []
     const mockContext: Partial<PluginContext> = {
@@ -72,7 +74,8 @@ describe("WorkTrunk shortcuts support", () => {
   })
 
   test("worktrunk-create supports @ shortcut", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let capturedCommand: string[] = []
     const mockContext: Partial<PluginContext> = {
@@ -102,7 +105,8 @@ describe("WorkTrunk shortcuts support", () => {
   })
 
   test("worktrunk-remove tool exists and supports @ shortcut", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let capturedCommand: string[] = []
     const mockContext: Partial<PluginContext> = {
@@ -134,7 +138,8 @@ describe("WorkTrunk shortcuts support", () => {
   })
 
   test("worktrunk-remove supports branch name", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let capturedCommand: string[] = []
     const mockContext: Partial<PluginContext> = {

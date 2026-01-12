@@ -3,7 +3,8 @@ import type { PluginContext } from "@opencode-ai/plugin"
 
 describe("worktrunk-create tool", () => {
   test("worktrunk-create tool exists", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     const mockContext: Partial<PluginContext> = {
       $: (() => ({
@@ -24,7 +25,8 @@ describe("worktrunk-create tool", () => {
   })
 
   test("worktrunk-create creates branch without base", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let capturedCommand: string[] = []
     const mockContext: Partial<PluginContext> = {
@@ -58,7 +60,8 @@ describe("worktrunk-create tool", () => {
   })
 
   test("worktrunk-create creates stacked branch with base=@", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let capturedCommand: string[] = []
     const mockContext: Partial<PluginContext> = {
@@ -91,7 +94,8 @@ describe("worktrunk-create tool", () => {
   })
 
   test("worktrunk-create creates branch with custom base", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let capturedCommand: string[] = []
     const mockContext: Partial<PluginContext> = {
@@ -124,7 +128,8 @@ describe("worktrunk-create tool", () => {
   })
 
   test("worktrunk-create handles errors gracefully", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     const mockContext: Partial<PluginContext> = {
       $: (() => ({

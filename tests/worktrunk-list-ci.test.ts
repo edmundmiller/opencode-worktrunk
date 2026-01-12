@@ -3,7 +3,8 @@ import type { PluginContext } from "@opencode-ai/plugin"
 
 describe("worktrunk-list CI monitoring", () => {
   test("worktrunk-list supports --full flag", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let capturedCommand: string[] = []
     const mockContext: Partial<PluginContext> = {
@@ -33,7 +34,8 @@ describe("worktrunk-list CI monitoring", () => {
   })
 
   test("worktrunk-list supports --branches flag", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let capturedCommand: string[] = []
     const mockContext: Partial<PluginContext> = {
@@ -63,7 +65,8 @@ describe("worktrunk-list CI monitoring", () => {
   })
 
   test("worktrunk-list supports --full --branches together", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     let capturedCommand: string[] = []
     const mockContext: Partial<PluginContext> = {

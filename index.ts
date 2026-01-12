@@ -9,9 +9,19 @@ import { type Plugin, tool } from "@opencode-ai/plugin"
  * 
  * Also provides custom tools for WorkTrunk operations.
  */
-export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, worktree }) => {
+const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
   let currentBranch: string | null = null
   let statusTimer: ReturnType<typeof setTimeout> | null = null
+
+  // Check if WorkTrunk is installed
+  const isWorkTrunkInstalled = async (): Promise<boolean> => {
+    try {
+      await $`wt --version`.quiet()
+      return true
+    } catch {
+      return false
+    }
+  }
 
   // Detect current git branch
   const getCurrentBranch = async (): Promise<string | null> => {
@@ -116,6 +126,10 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
           branches: tool.schema.boolean().optional().describe("Include branches without worktrees (useful with --full for CI monitoring)"),
         },
         async execute(args, ctx) {
+          if (!(await isWorkTrunkInstalled())) {
+            return "Error: WorkTrunk is not installed. Please install it from https://worktrunk.dev/install"
+          }
+          
           try {
             const format = args.format || "text"
             const parts: string[] = []
@@ -134,7 +148,8 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
             const result = await $`wt list${flags}`.quiet()
             return result.stdout.toString()
           } catch (error) {
-            return `Error running 'wt list': ${error}`
+            const errorMsg = error instanceof Error ? error.message : String(error)
+            return `Error running 'wt list': ${errorMsg}\n\nTroubleshooting:\n- Ensure WorkTrunk is installed: wt --version\n- Check you're in a git repository: git rev-parse --git-dir\n- Verify WorkTrunk is initialized: wt list`
           }
         },
       }),
@@ -145,6 +160,10 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
           branch: tool.schema.string().describe("Branch name to switch to, or '@' for current branch, or '-' for previous worktree"),
         },
         async execute(args, ctx) {
+          if (!(await isWorkTrunkInstalled())) {
+            return "Error: WorkTrunk is not installed. Please install it from https://worktrunk.dev/install"
+          }
+          
           try {
             const result = await $`wt switch ${args.branch}`.quiet()
             // Update currentBranch if not using shortcuts
@@ -160,7 +179,8 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
             updateStatus("💬")
             return `Switched to branch: ${args.branch}\n${result.stdout.toString()}`
           } catch (error) {
-            return `Error switching to branch '${args.branch}': ${error}`
+            const errorMsg = error instanceof Error ? error.message : String(error)
+            return `Error switching to branch '${args.branch}': ${errorMsg}\n\nTroubleshooting:\n- Ensure the branch exists: wt list\n- Check branch name spelling\n- Verify you're in a WorkTrunk-managed repository`
           }
         },
       }),
@@ -169,19 +189,24 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
         description: "Get current WorkTrunk status for the active branch",
         args: {},
         async execute(args, ctx) {
+          if (!(await isWorkTrunkInstalled())) {
+            return "Error: WorkTrunk is not installed. Please install it from https://worktrunk.dev/install"
+          }
+          
           try {
             if (!currentBranch) {
               currentBranch = await getCurrentBranch()
             }
             
             if (!currentBranch) {
-              return "Not in a git repository or no branch detected"
+              return "Not in a git repository or no branch detected.\n\nTroubleshooting:\n- Ensure you're in a git repository: git rev-parse --git-dir\n- Check you're on a branch (not detached HEAD): git branch"
             }
 
             const result = await $`wt list --branch ${currentBranch}`.quiet()
             return result.stdout.toString() || `Current branch: ${currentBranch}`
           } catch (error) {
-            return `Error getting WorkTrunk status: ${error}`
+            const errorMsg = error instanceof Error ? error.message : String(error)
+            return `Error getting WorkTrunk status: ${errorMsg}`
           }
         },
       }),
@@ -193,6 +218,15 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
           base: tool.schema.string().optional().describe("Base branch or commit to branch from. Use '@' to branch from current HEAD (stacked branches)."),
         },
         async execute(args, ctx) {
+          if (!(await isWorkTrunkInstalled())) {
+            return "Error: WorkTrunk is not installed. Please install it from https://worktrunk.dev/install"
+          }
+          
+          // Validate branch name
+          if (args.branch && !/^[@\w\/\-\.]+$/.test(args.branch) && args.branch !== "@") {
+            return `Error: Invalid branch name '${args.branch}'. Branch names should only contain letters, numbers, slashes, hyphens, dots, or '@' for current branch.`
+          }
+          
           try {
             if (args.base) {
               const result = await $`wt switch --create ${args.branch} --base=${args.base}`.quiet()
@@ -207,7 +241,11 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
               return `Created and switched to branch: ${args.branch}\n${result.stdout.toString()}`
             }
           } catch (error) {
-            return `Error creating worktree for branch '${args.branch}': ${error}`
+            const errorMsg = error instanceof Error ? error.message : String(error)
+            if (errorMsg.includes("already exists")) {
+              return `Error: Branch '${args.branch}' already exists. Use worktrunk-switch to switch to it, or choose a different name.`
+            }
+            return `Error creating worktree for branch '${args.branch}': ${errorMsg}`
           }
         },
       }),
@@ -218,6 +256,10 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
           branch: tool.schema.string().describe("Branch name or worktree to remove, or '@' for current worktree"),
         },
         async execute(args, ctx) {
+          if (!(await isWorkTrunkInstalled())) {
+            return "Error: WorkTrunk is not installed. Please install it from https://worktrunk.dev/install"
+          }
+          
           try {
             const result = await $`wt remove ${args.branch}`.quiet()
             // If removing current worktree, clear currentBranch
@@ -226,7 +268,11 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
             }
             return `Removed worktree: ${args.branch}\n${result.stdout.toString()}`
           } catch (error) {
-            return `Error removing worktree '${args.branch}': ${error}`
+            const errorMsg = error instanceof Error ? error.message : String(error)
+            if (errorMsg.includes("not found") || errorMsg.includes("does not exist")) {
+              return `Error: Worktree '${args.branch}' not found. Use 'worktrunk-list' to see available worktrees.`
+            }
+            return `Error removing worktree '${args.branch}': ${errorMsg}`
           }
         },
       }),
@@ -235,15 +281,22 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
         description: "Get the default branch name dynamically. Works regardless of whether default is 'main' or 'master', enabling scripts to work on any repo.",
         args: {},
         async execute(args, ctx) {
+          if (!(await isWorkTrunkInstalled())) {
+            return "Error: WorkTrunk is not installed. Please install it from https://worktrunk.dev/install"
+          }
+          
           try {
             const result = await $`wt config state default-branch`.quiet()
             const branch = result.stdout.toString().trim()
-            return branch || "Unable to determine default branch"
+            return branch || "Unable to determine default branch. WorkTrunk may not be initialized in this repository."
           } catch (error) {
-            return `Error getting default branch: ${error}`
+            const errorMsg = error instanceof Error ? error.message : String(error)
+            return `Error getting default branch: ${errorMsg}\n\nTroubleshooting:\n- Ensure WorkTrunk is initialized: wt list\n- Check repository configuration: wt config state`
           }
         },
       }),
     },
   }
 }
+
+export default plugin

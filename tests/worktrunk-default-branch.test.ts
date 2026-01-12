@@ -3,7 +3,8 @@ import type { PluginContext } from "@opencode-ai/plugin"
 
 describe("worktrunk-default-branch tool", () => {
   test("worktrunk-default-branch tool exists", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     const mockContext: Partial<PluginContext> = {
       $: (() => ({
@@ -24,7 +25,8 @@ describe("worktrunk-default-branch tool", () => {
   })
 
   test("worktrunk-default-branch returns default branch name", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     const mockContext: Partial<PluginContext> = {
       $: (() => ({
@@ -48,7 +50,8 @@ describe("worktrunk-default-branch tool", () => {
   })
 
   test("worktrunk-default-branch handles master branch", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     const mockContext: Partial<PluginContext> = {
       $: (() => ({
@@ -72,7 +75,8 @@ describe("worktrunk-default-branch tool", () => {
   })
 
   test("worktrunk-default-branch handles errors gracefully", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     const mockContext: Partial<PluginContext> = {
       $: (() => ({
@@ -96,7 +100,8 @@ describe("worktrunk-default-branch tool", () => {
   })
 
   test("worktrunk-default-branch handles empty output", async () => {
-    const { WorkTrunkPlugin } = await import("../index.ts")
+    const pluginModule = await import("../index.ts")
+    const WorkTrunkPlugin = pluginModule.default
     
     const mockContext: Partial<PluginContext> = {
       $: (() => ({
