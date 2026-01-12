@@ -230,6 +230,20 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
           }
         },
       }),
+
+      "worktrunk-default-branch": tool({
+        description: "Get the default branch name dynamically. Works regardless of whether default is 'main' or 'master', enabling scripts to work on any repo.",
+        args: {},
+        async execute(args, ctx) {
+          try {
+            const result = await $`wt config state default-branch`.quiet()
+            const branch = result.stdout.toString().trim()
+            return branch || "Unable to determine default branch"
+          } catch (error) {
+            return `Error getting default branch: ${error}`
+          }
+        },
+      }),
     },
   }
 }
