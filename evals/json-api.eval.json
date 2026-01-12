@@ -1,0 +1,68 @@
+{
+  "name": "worktrunk-json-api",
+  "description": "Test JSON API support for worktrunk-list tool",
+  "dataset": {
+    "name": "json-api",
+    "examples": [
+      {
+        "id": "list-json",
+        "inputs": {
+          "query": "List all WorkTrunk worktrees in JSON format using worktrunk-list with --format=json"
+        }
+      },
+      {
+        "id": "parse-json",
+        "inputs": {
+          "query": "Use worktrunk-list with JSON output and parse the results to show only branch names"
+        }
+      }
+    ]
+  },
+  "variants": {
+    "with-plugin": {
+      "plugins": ["opencode-worktrunk"]
+    }
+  },
+  "setup": {
+    "template": "empty",
+    "vcs": {
+      "git": {
+        "defaultBranch": "main",
+        "commits": [
+          {
+            "message": "Initial commit",
+            "files": {
+              "README.md": "# Test Project"
+            }
+          }
+        ],
+        "branches": ["feature/test", "bugfix/issue-1"]
+      }
+    }
+  },
+  "evaluators": [
+    {
+      "type": "code",
+      "assertions": [
+        {
+          "type": "tool_called",
+          "tool": "worktrunk-list",
+          "args_contain": "json"
+        }
+      ]
+    },
+    {
+      "type": "llm-judge",
+      "criteria": [
+        "JSON output is valid and parseable",
+        "JSON structure contains expected fields (branch, status, etc.)",
+        "JSON format is more useful than plain text for programmatic access"
+      ],
+      "reference_free": true
+    }
+  ],
+  "error_handling": {
+    "on_error": "continue",
+    "timeout_ms": 120000
+  }
+}

@@ -7,6 +7,15 @@
   "dependencies": {
     "@opencode-ai/plugin": "latest"
   },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "opencode-evals": "latest"
+  },
+  "scripts": {
+    "test": "bun test",
+    "eval": "opencode-eval run evals/",
+    "eval:dry": "opencode-eval run evals/ --dry-run"
+  },
   "keywords": [
     "opencode",
     "worktrunk",

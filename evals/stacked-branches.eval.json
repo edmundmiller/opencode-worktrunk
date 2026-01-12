@@ -1,0 +1,74 @@
+{
+  "name": "worktrunk-stacked-branches",
+  "description": "Test stacked branches support (--base=@ to branch from current HEAD)",
+  "dataset": {
+    "name": "stacked-branches",
+    "examples": [
+      {
+        "id": "create-stacked",
+        "inputs": {
+          "query": "Create a new worktree for branch 'feature-part2' that branches from the current HEAD using worktrunk-create with --base=@"
+        }
+      },
+      {
+        "id": "stack-multiple",
+        "inputs": {
+          "query": "Create a chain of stacked branches: feature-part1, then feature-part2 from part1, then feature-part3 from part2"
+        }
+      }
+    ]
+  },
+  "variants": {
+    "with-plugin": {
+      "plugins": ["opencode-worktrunk"]
+    }
+  },
+  "setup": {
+    "template": "empty",
+    "vcs": {
+      "git": {
+        "defaultBranch": "main",
+        "commits": [
+          {
+            "message": "Initial commit",
+            "files": {
+              "README.md": "# Test Project"
+            }
+          },
+          {
+            "message": "Add feature part 1",
+            "files": {
+              "src/part1.ts": "export const part1 = 'part1';"
+            }
+          }
+        ],
+        "branches": ["feature/part1"]
+      }
+    }
+  },
+  "evaluators": [
+    {
+      "type": "code",
+      "assertions": [
+        {
+          "type": "tool_called",
+          "tool": "worktrunk-create",
+          "args_contain": "base"
+        }
+      ]
+    },
+    {
+      "type": "llm-judge",
+      "criteria": [
+        "Stacked branches are created correctly from current HEAD",
+        "Branch relationships are maintained properly",
+        "Stacked branch workflow enables incremental feature development"
+      ],
+      "reference_free": true
+    }
+  ],
+  "error_handling": {
+    "on_error": "continue",
+    "timeout_ms": 120000
+  }
+}

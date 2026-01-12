@@ -109,11 +109,29 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
     // Custom tools for WorkTrunk operations
     tool: {
       "worktrunk-list": tool({
-        description: "List all WorkTrunk worktrees with their status",
-        args: {},
+        description: "List all WorkTrunk worktrees with their status. Supports JSON format for programmatic access. Use --full --branches to show PR/CI status across all branches including those without worktrees.",
+        args: {
+          format: tool.schema.string().optional().describe("Output format: 'text' (default) or 'json' for structured output"),
+          full: tool.schema.boolean().optional().describe("Show full details including PR/CI status"),
+          branches: tool.schema.boolean().optional().describe("Include branches without worktrees (useful with --full for CI monitoring)"),
+        },
         async execute(args, ctx) {
           try {
-            const result = await $`wt list`.quiet()
+            const format = args.format || "text"
+            const parts: string[] = []
+            
+            if (format === "json") {
+              parts.push("--format=json")
+            }
+            if (args.full) {
+              parts.push("--full")
+            }
+            if (args.branches) {
+              parts.push("--branches")
+            }
+            
+            const flags = parts.length > 0 ? ` ${parts.join(" ")}` : ""
+            const result = await $`wt list${flags}`.quiet()
             return result.stdout.toString()
           } catch (error) {
             return `Error running 'wt list': ${error}`
@@ -122,14 +140,23 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
       }),
 
       "worktrunk-switch": tool({
-        description: "Switch to a different WorkTrunk worktree/branch",
+        description: "Switch to a different WorkTrunk worktree/branch. Supports shortcuts: '@' for current branch, '-' for previous worktree.",
         args: {
-          branch: tool.schema.string().describe("Branch name to switch to"),
+          branch: tool.schema.string().describe("Branch name to switch to, or '@' for current branch, or '-' for previous worktree"),
         },
         async execute(args, ctx) {
           try {
             const result = await $`wt switch ${args.branch}`.quiet()
-            currentBranch = args.branch
+            // Update currentBranch if not using shortcuts
+            if (args.branch !== "@" && args.branch !== "-") {
+              currentBranch = args.branch
+            } else if (args.branch === "@") {
+              // Refresh current branch
+              currentBranch = await getCurrentBranch()
+            } else {
+              // For '-', refresh current branch after switch
+              currentBranch = await getCurrentBranch()
+            }
             updateStatus("💬")
             return `Switched to branch: ${args.branch}\n${result.stdout.toString()}`
           } catch (error) {
@@ -160,18 +187,46 @@ export const WorkTrunkPlugin: Plugin = async ({ project, client, $, directory, w
       }),
 
       "worktrunk-create": tool({
-        description: "Create a new WorkTrunk worktree for a branch",
+        description: "Create a new WorkTrunk worktree for a branch. Supports stacked branches with --base=@ to branch from current HEAD. Supports shortcuts: '@' for current branch.",
         args: {
-          branch: tool.schema.string().describe("Branch name to create worktree for"),
+          branch: tool.schema.string().describe("Branch name to create worktree for, or '@' for current branch"),
+          base: tool.schema.string().optional().describe("Base branch or commit to branch from. Use '@' to branch from current HEAD (stacked branches)."),
         },
         async execute(args, ctx) {
           try {
-            const result = await $`wt switch --create ${args.branch}`.quiet()
-            currentBranch = args.branch
-            updateStatus("💬")
-            return `Created and switched to branch: ${args.branch}\n${result.stdout.toString()}`
+            if (args.base) {
+              const result = await $`wt switch --create ${args.branch} --base=${args.base}`.quiet()
+              currentBranch = args.branch
+              updateStatus("💬")
+              const baseInfo = args.base === "@" ? "current HEAD" : args.base
+              return `Created and switched to branch: ${args.branch} (from ${baseInfo})\n${result.stdout.toString()}`
+            } else {
+              const result = await $`wt switch --create ${args.branch}`.quiet()
+              currentBranch = args.branch
+              updateStatus("💬")
+              return `Created and switched to branch: ${args.branch}\n${result.stdout.toString()}`
+            }
           } catch (error) {
             return `Error creating worktree for branch '${args.branch}': ${error}`
+          }
+        },
+      }),
+
+      "worktrunk-remove": tool({
+        description: "Remove a WorkTrunk worktree. Supports shortcuts: '@' for current worktree.",
+        args: {
+          branch: tool.schema.string().describe("Branch name or worktree to remove, or '@' for current worktree"),
+        },
+        async execute(args, ctx) {
+          try {
+            const result = await $`wt remove ${args.branch}`.quiet()
+            // If removing current worktree, clear currentBranch
+            if (args.branch === "@" || args.branch === currentBranch) {
+              currentBranch = null
+            }
+            return `Removed worktree: ${args.branch}\n${result.stdout.toString()}`
+          } catch (error) {
+            return `Error removing worktree '${args.branch}': ${error}`
           }
         },
       }),

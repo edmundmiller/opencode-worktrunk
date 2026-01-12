@@ -1,0 +1,69 @@
+{
+  "name": "worktrunk-status-tracking",
+  "description": "Test automatic status marker tracking (🤖 working, 💬 waiting)",
+  "dataset": {
+    "name": "status-tracking",
+    "examples": [
+      {
+        "id": "status-working",
+        "inputs": {
+          "query": "Use the worktrunk-list tool to list all worktrees"
+        }
+      },
+      {
+        "id": "status-waiting",
+        "inputs": {
+          "query": "What is the current WorkTrunk status?"
+        }
+      }
+    ]
+  },
+  "variants": {
+    "with-plugin": {
+      "plugins": ["opencode-worktrunk"]
+    },
+    "without-plugin": {
+      "plugins": []
+    }
+  },
+  "setup": {
+    "template": "empty",
+    "vcs": {
+      "git": {
+        "defaultBranch": "main",
+        "commits": [
+          {
+            "message": "Initial commit",
+            "files": {
+              "README.md": "# Test Project"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "evaluators": [
+    {
+      "type": "code",
+      "assertions": [
+        {
+          "type": "tool_called",
+          "tool": "worktrunk-list"
+        }
+      ]
+    },
+    {
+      "type": "llm-judge",
+      "criteria": [
+        "Status markers are set appropriately when Claude is working",
+        "Status markers are set appropriately when Claude is waiting",
+        "Status tracking works automatically without manual intervention"
+      ],
+      "reference_free": true
+    }
+  ],
+  "error_handling": {
+    "on_error": "continue",
+    "timeout_ms": 120000
+  }
+}

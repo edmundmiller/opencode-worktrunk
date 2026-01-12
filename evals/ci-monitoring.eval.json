@@ -1,0 +1,77 @@
+{
+  "name": "worktrunk-ci-monitoring",
+  "description": "Test CI monitoring support (--full --branches to show PR/CI status)",
+  "dataset": {
+    "name": "ci-monitoring",
+    "examples": [
+      {
+        "id": "list-full-branches",
+        "inputs": {
+          "query": "List all branches with full CI status using worktrunk-list with --full --branches flags"
+        }
+      },
+      {
+        "id": "monitor-ci",
+        "inputs": {
+          "query": "Show CI status across all branches including those without worktrees"
+        }
+      }
+    ]
+  },
+  "variants": {
+    "with-plugin": {
+      "plugins": ["opencode-worktrunk"]
+    }
+  },
+  "setup": {
+    "template": "empty",
+    "vcs": {
+      "git": {
+        "defaultBranch": "main",
+        "commits": [
+          {
+            "message": "Initial commit",
+            "files": {
+              "README.md": "# Test Project"
+            }
+          }
+        ],
+        "branches": ["feature/test", "bugfix/issue-1", "feature/without-worktree"],
+        "remote": {
+          "name": "origin",
+          "branches": ["main"]
+        }
+      }
+    }
+  },
+  "evaluators": [
+    {
+      "type": "code",
+      "assertions": [
+        {
+          "type": "tool_called",
+          "tool": "worktrunk-list",
+          "args_contain": "full"
+        },
+        {
+          "type": "tool_called",
+          "tool": "worktrunk-list",
+          "args_contain": "branches"
+        }
+      ]
+    },
+    {
+      "type": "llm-judge",
+      "criteria": [
+        "CI monitoring shows status for all branches",
+        "Branches without worktrees are included in the output",
+        "CI status information is useful for monitoring parallel work"
+      ],
+      "reference_free": true
+    }
+  ],
+  "error_handling": {
+    "on_error": "continue",
+    "timeout_ms": 120000
+  }
+}
