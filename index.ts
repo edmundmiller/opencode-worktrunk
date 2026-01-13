@@ -289,6 +289,61 @@ Use this to check the current branch's worktree status, including any status mar
         },
       }),
 
+      "worktrunk-status-update": tool({
+        description: `Manually update WorkTrunk status marker for the current branch.
+
+Examples:
+- worktrunk-status-update({marker: "🤖"}) - Set working marker
+- worktrunk-status-update({marker: "💬"}) - Set waiting marker
+- worktrunk-status-update({marker: ""}) - Clear marker
+- worktrunk-status-update({marker: "🚧", branch: "feature/x"}) - Update specific branch
+
+Use cases:
+- Explicit status changes when automatic tracking misses updates
+- Recovery from missed status updates
+- Custom status markers for specific workflows
+- Setting status on branches other than current
+
+The plugin automatically manages status markers, but this tool allows manual control when needed.`,
+        args: {
+          marker: tool.schema.string().describe("Status marker to set (e.g., '🤖', '💬', or '' to clear). Use empty string to clear marker."),
+          branch: tool.schema.string().optional().describe("Branch name to update. Defaults to current branch. Use '@' for current branch."),
+        },
+        async execute(args, ctx) {
+          if (!(await isWorkTrunkInstalled())) {
+            return "Error: WorkTrunk is not installed. Please install it from https://worktrunk.dev/install"
+          }
+          
+          try {
+            let targetBranch = args.branch
+            
+            // Handle shortcuts and defaults
+            if (!targetBranch || targetBranch === "@") {
+              targetBranch = await getCurrentBranch()
+              if (!targetBranch) {
+                return "Not in a git repository or no branch detected.\n\nTroubleshooting:\n- Ensure you're in a git repository: git rev-parse --git-dir\n- Check you're on a branch (not detached HEAD): git branch"
+              }
+            }
+            
+            // Update the marker directly using wt command
+            const markerValue = args.marker || ""
+            await $`wt config state marker set "${markerValue}" --branch ${targetBranch}`.quiet()
+            
+            // Also update currentBranch tracking if updating current branch
+            if (!args.branch || args.branch === "@") {
+              currentBranch = targetBranch
+              lastKnownBranch = targetBranch
+            }
+            
+            const markerDisplay = args.marker || "(cleared)"
+            return `Updated status marker for branch '${targetBranch}': ${markerDisplay}`
+          } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error)
+            return `Error updating status marker: ${errorMsg}`
+          }
+        },
+      }),
+
       "worktrunk-create": tool({
         description: `Create a new WorkTrunk worktree for a branch.
 
