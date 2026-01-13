@@ -55,17 +55,31 @@
           "tool": "worktrunk-switch"
         },
         {
+          "type": "environment_state",
+          "check": "shortcut_resolves",
+          "shortcut": "@",
+          "description": "Shortcut '@' actually resolves to current branch"
+        },
+        {
           "type": "tool_called",
           "tool": "worktrunk-remove"
+        },
+        {
+          "type": "environment_state",
+          "check": "shortcut_works",
+          "shortcut": "@",
+          "operation": "remove",
+          "description": "Shortcut '@' actually works for remove operation"
         }
       ]
     },
     {
       "type": "llm-judge",
       "criteria": [
-        "Shortcuts (@ and -) are properly recognized and handled",
+        "Shortcuts (@ and -) are actually recognized and produce expected outcomes (verified, not just tool called)",
         "Shortcuts work correctly with switch, create, and remove operations",
-        "Shortcuts provide convenient alternatives to explicit branch names"
+        "Shortcuts provide convenient alternatives to explicit branch names",
+        "Shortcut resolution matches the actual current branch state"
       ],
       "reference_free": true
     }

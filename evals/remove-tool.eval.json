@@ -47,15 +47,28 @@
         {
           "type": "tool_called",
           "tool": "worktrunk-remove"
+        },
+        {
+          "type": "environment_state",
+          "check": "worktree_removed",
+          "branch": "feature/test",
+          "description": "Worktree for feature/test is actually removed from the environment"
+        },
+        {
+          "type": "environment_state",
+          "check": "worktree_not_exists",
+          "branch": "feature/test",
+          "description": "Worktree no longer exists after removal (verified in environment)"
         }
       ]
     },
     {
       "type": "llm-judge",
       "criteria": [
-        "Worktree removal executes successfully",
-        "Removed worktrees are properly cleaned up",
-        "Tool handles errors gracefully (e.g., removing non-existent worktree)"
+        "Worktree removal actually executes successfully and removes the worktree (verified, not just tool called)",
+        "Removed worktrees are actually cleaned up from the filesystem and git worktree list",
+        "Tool handles errors gracefully (e.g., removing non-existent worktree)",
+        "Worktree removal produces the expected outcome in the environment"
       ],
       "reference_free": true
     }

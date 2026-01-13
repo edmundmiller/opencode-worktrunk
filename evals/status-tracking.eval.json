@@ -49,15 +49,28 @@
         {
           "type": "tool_called",
           "tool": "worktrunk-list"
+        },
+        {
+          "type": "environment_state",
+          "check": "status_marker_present",
+          "marker": "🤖",
+          "description": "Status marker 🤖 is actually present in worktree status when working"
+        },
+        {
+          "type": "environment_state",
+          "check": "status_marker_present",
+          "marker": "💬",
+          "description": "Status marker 💬 is actually present in worktree status when waiting"
         }
       ]
     },
     {
       "type": "llm-judge",
       "criteria": [
-        "Status markers are set appropriately when Claude is working",
-        "Status markers are set appropriately when Claude is waiting",
-        "Status tracking works automatically without manual intervention"
+        "Status markers are actually set in the WorkTrunk environment (verified, not just tool called)",
+        "Status markers appear correctly in worktree status output",
+        "Status tracking works automatically without manual intervention",
+        "Status markers reflect the actual state of the OpenCode session"
       ],
       "reference_free": true
     }

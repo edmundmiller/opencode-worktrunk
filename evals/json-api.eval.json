@@ -48,15 +48,27 @@
           "type": "tool_called",
           "tool": "worktrunk-list",
           "args_contain": "json"
+        },
+        {
+          "type": "environment_state",
+          "check": "json_valid",
+          "description": "JSON output is actually valid and parseable"
+        },
+        {
+          "type": "environment_state",
+          "check": "json_contains_fields",
+          "fields": ["branch", "status"],
+          "description": "JSON structure contains expected fields (branch, status, etc.)"
         }
       ]
     },
     {
       "type": "llm-judge",
       "criteria": [
-        "JSON output is valid and parseable",
-        "JSON structure contains expected fields (branch, status, etc.)",
-        "JSON format is more useful than plain text for programmatic access"
+        "JSON output is actually valid and parseable (verified, not just tool called)",
+        "JSON structure contains expected fields and can be used programmatically",
+        "JSON format provides structured data that is more useful than plain text",
+        "JSON parsing works correctly in the evaluation environment"
       ],
       "reference_free": true
     }

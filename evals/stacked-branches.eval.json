@@ -54,15 +54,29 @@
           "type": "tool_called",
           "tool": "worktrunk-create",
           "args_contain": "base"
+        },
+        {
+          "type": "environment_state",
+          "check": "worktree_exists",
+          "branch": "feature-part2",
+          "description": "Stacked branch feature-part2 actually exists after creation"
+        },
+        {
+          "type": "environment_state",
+          "check": "branch_parent",
+          "branch": "feature-part2",
+          "parent": "feature-part1",
+          "description": "feature-part2 actually branches from feature-part1 (stacked relationship verified)"
         }
       ]
     },
     {
       "type": "llm-judge",
       "criteria": [
-        "Stacked branches are created correctly from current HEAD",
-        "Branch relationships are maintained properly",
-        "Stacked branch workflow enables incremental feature development"
+        "Stacked branches are actually created correctly from current HEAD (verified, not just tool called)",
+        "Branch relationships are actually maintained properly in the git repository",
+        "Stacked branch workflow enables incremental feature development",
+        "Branch parent-child relationships match the expected structure"
       ],
       "reference_free": true
     }

@@ -57,15 +57,27 @@
           "type": "tool_called",
           "tool": "worktrunk-list",
           "args_contain": "branches"
+        },
+        {
+          "type": "environment_state",
+          "check": "output_contains_branches",
+          "branches": ["main", "feature/test", "bugfix/issue-1", "feature/without-worktree"],
+          "description": "Output actually contains all branches including those without worktrees"
+        },
+        {
+          "type": "environment_state",
+          "check": "output_contains_ci_status",
+          "description": "Output actually contains CI status information for branches"
         }
       ]
     },
     {
       "type": "llm-judge",
       "criteria": [
-        "CI monitoring shows status for all branches",
-        "Branches without worktrees are included in the output",
-        "CI status information is useful for monitoring parallel work"
+        "CI monitoring output actually shows status for all branches (verified, not just tool called)",
+        "Branches without worktrees are actually included in the output",
+        "CI status information is present and useful for monitoring parallel work",
+        "Output format enables effective CI status monitoring"
       ],
       "reference_free": true
     }

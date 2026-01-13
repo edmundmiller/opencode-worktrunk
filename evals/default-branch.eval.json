@@ -46,14 +46,21 @@
         {
           "type": "tool_called",
           "tool": "worktrunk-default-branch"
+        },
+        {
+          "type": "environment_state",
+          "check": "default_branch_matches",
+          "branch": "main",
+          "description": "Default branch is actually detected as 'main' in the environment"
         }
       ]
     },
     {
       "type": "llm-judge",
       "criteria": [
-        "Default branch is detected correctly",
+        "Default branch is actually detected correctly in the environment (verified, not just tool called)",
         "Tool works regardless of whether default is 'main' or 'master'",
+        "Default branch information matches the actual git repository configuration",
         "Default branch information is useful for scripts and automation"
       ],
       "reference_free": true

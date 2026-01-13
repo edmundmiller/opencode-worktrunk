@@ -68,15 +68,29 @@
           "tool": "worktrunk-create"
         },
         {
+          "type": "environment_state",
+          "check": "worktree_exists",
+          "branch": "feature/test",
+          "description": "Worktree for feature/test branch actually exists after creation"
+        },
+        {
           "type": "tool_called",
           "tool": "worktrunk-switch"
+        },
+        {
+          "type": "environment_state",
+          "check": "current_branch",
+          "branch": "main",
+          "description": "Actually switched to main branch"
         }
       ]
     },
     {
       "type": "llm-judge",
       "criteria": [
-        "Each tool executes successfully",
+        "Each tool executes successfully and produces the expected outcome",
+        "Worktrees are actually created in the environment (not just tool called)",
+        "Branch switches actually change the working directory",
         "Tool outputs are informative and useful",
         "Tools handle errors gracefully"
       ],
