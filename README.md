@@ -300,6 +300,45 @@ const result = worktrunk-list({ format: "json", full: true, branches: true })
 // Parse and check CI status
 ```
 
+## WorkTrunk Hooks Integration
+
+WorkTrunk provides a hooks system that allows running shell commands at key points in the worktree lifecycle. The plugin can be extended to integrate with these hooks for advanced workflows.
+
+### Available Hooks
+
+WorkTrunk supports the following hooks:
+
+- **post-create** - Run after creating a new worktree
+- **post-start** - Run when starting work on a worktree
+- **post-switch** - Run after switching to a worktree
+- **pre-commit** - Run before committing changes
+- **pre-merge** - Run before merging a worktree
+- **post-merge** - Run after merging a worktree
+- **pre-remove** - Run before removing a worktree
+
+### Viewing Configured Hooks
+
+```bash
+wt hook show
+```
+
+### Potential Integration Use Cases
+
+1. **Automatic PR Creation**: Use `post-create` hook to automatically create PRs for new branches
+2. **CI Status Updates**: Use `post-switch` hook to trigger CI runs
+3. **Custom Workflow Automation**: Use hooks to run custom scripts at lifecycle events
+4. **Status Synchronization**: Use hooks to sync status markers across systems
+
+### Future Enhancements
+
+The plugin could be extended to:
+- Automatically configure hooks for common workflows
+- Provide tools to manage hooks programmatically
+- Integrate hook execution with OpenCode session events
+- Provide hook templates for common use cases
+
+For now, hooks can be configured manually using `wt config` and will work alongside the plugin's automatic status tracking.
+
 ## Development
 
 The plugin is written in TypeScript and uses the OpenCode plugin API. Key files:
