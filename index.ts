@@ -98,25 +98,39 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
     }
   }
 
-  // Initialize - detect branch on startup
-  currentBranch = await getCurrentBranch()
-  lastKnownBranch = currentBranch
+  // Initialize lazily - don't block startup with git/wt commands
+  // Branch detection will happen on first status update
+  
+  // Use setImmediate to defer initialization after plugin loads
+  setTimeout(async () => {
+    try {
+      currentBranch = await getCurrentBranch()
+      lastKnownBranch = currentBranch
 
-  // Set up periodic branch checking to detect external changes
-  // Check every 2 seconds for branch changes (e.g., manual git checkout)
-  if (currentBranch) {
-    branchCheckInterval = setInterval(() => {
-      checkBranchChange().catch(() => {
-        // Silently handle errors in background check
+      // Set up periodic branch checking to detect external changes
+      // Check every 2 seconds for branch changes (e.g., manual git checkout)
+      if (currentBranch) {
+        branchCheckInterval = setInterval(() => {
+          checkBranchChange().catch(() => {
+            // Silently handle errors in background check
+          })
+        }, 2000)
+      }
+
+      await client.app.log({
+        service: "opencode-worktrunk",
+        level: "info",
+        message: `WorkTrunk plugin initialized${currentBranch ? ` for branch: ${currentBranch}` : ""}`,
       })
-    }, 2000)
-  }
-
-  await client.app.log({
-    service: "opencode-worktrunk",
-    level: "info",
-    message: `WorkTrunk plugin initialized${currentBranch ? ` for branch: ${currentBranch}` : ""}`,
-  })
+    } catch (error) {
+      // Initialization failed, plugin will work without branch tracking
+      await client.app.log({
+        service: "opencode-worktrunk",
+        level: "warn",
+        message: `WorkTrunk plugin init failed: ${error}`,
+      })
+    }
+  }, 100)
 
   return {
     // Track session status changes
