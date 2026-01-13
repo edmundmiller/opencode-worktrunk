@@ -15,38 +15,69 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
   let branchCheckInterval: ReturnType<typeof setInterval> | null = null
   let lastKnownBranch: string | null = null
 
-  // Check if WorkTrunk is installed
+  // Performance optimization: Cache WorkTrunk installation check
+  let workTrunkInstalledCache: boolean | null = null
+  let workTrunkCheckTime: number = 0
+  const WORKTRUNK_CHECK_CACHE_TTL = 60000 // 1 minute cache
+
+  // Check if WorkTrunk is installed (with caching)
   const isWorkTrunkInstalled = async (): Promise<boolean> => {
+    const now = Date.now()
+    // Use cached value if still valid
+    if (workTrunkInstalledCache !== null && (now - workTrunkCheckTime) < WORKTRUNK_CHECK_CACHE_TTL) {
+      return workTrunkInstalledCache
+    }
+    
     try {
       await $`wt --version`.quiet()
+      workTrunkInstalledCache = true
+      workTrunkCheckTime = now
       return true
     } catch {
+      workTrunkInstalledCache = false
+      workTrunkCheckTime = now
       return false
     }
   }
 
-  // Detect current git branch
-  const getCurrentBranch = async (): Promise<string | null> => {
+  // Performance optimization: Cache branch information
+  let branchCache: { branch: string | null; timestamp: number } | null = null
+  const BRANCH_CACHE_TTL = 1000 // 1 second cache for branch info
+
+  // Detect current git branch (with caching)
+  const getCurrentBranch = async (forceRefresh: boolean = false): Promise<string | null> => {
+    const now = Date.now()
+    
+    // Use cached value if still valid and not forcing refresh
+    if (!forceRefresh && branchCache && (now - branchCache.timestamp) < BRANCH_CACHE_TTL) {
+      return branchCache.branch
+    }
+    
     try {
       const result = await $`git rev-parse --abbrev-ref HEAD`.quiet()
-      return result.stdout.toString().trim() || null
+      const branch = result.stdout.toString().trim() || null
+      branchCache = { branch, timestamp: now }
+      return branch
     } catch {
+      branchCache = { branch: null, timestamp: now }
       return null
     }
   }
 
   // Set WorkTrunk status marker
   const setStatusMarker = async (marker: string | null) => {
-    // Always refresh branch before setting marker to handle external changes
+    // Use cached branch if available, but refresh if needed
     if (!currentBranch) {
       currentBranch = await getCurrentBranch()
       lastKnownBranch = currentBranch
     } else {
-      // Quick check if branch changed
+      // Quick check if branch changed (use cache for performance)
       const current = await getCurrentBranch()
       if (current !== currentBranch && current !== null) {
         currentBranch = current
         lastKnownBranch = current
+        // Invalidate cache on branch change
+        branchCache = null
       }
     }
     
@@ -85,11 +116,13 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
 
   // Check for branch changes that occur outside the plugin
   const checkBranchChange = async () => {
-    const newBranch = await getCurrentBranch()
+    // Force refresh to detect external changes
+    const newBranch = await getCurrentBranch(true)
     if (newBranch !== lastKnownBranch && newBranch !== null) {
-      // Branch changed externally - update tracking
+      // Branch changed externally - update tracking and invalidate cache
       currentBranch = newBranch
       lastKnownBranch = newBranch
+      branchCache = null // Invalidate cache on branch change
       await client.app.log({
         service: "opencode-worktrunk",
         level: "info",
