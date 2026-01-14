@@ -272,7 +272,7 @@ Use when you need to change context to work on a different branch.`,
           }
           
           try {
-            const result = await $`wt switch ${args.branch}`.quiet()
+            const result = await $`wt switch --yes ${args.branch}`.quiet()
             // Update currentBranch if not using shortcuts
             if (args.branch !== "@" && args.branch !== "-") {
               currentBranch = args.branch
@@ -397,6 +397,7 @@ Use this when starting work on a new feature branch.`,
         args: {
           branch: tool.schema.string().describe("Branch name to create worktree for, or '@' for current branch"),
           base: tool.schema.string().optional().describe("Base branch or commit to branch from. Use '@' to branch from current HEAD (stacked branches)."),
+          skipHooks: tool.schema.boolean().optional().describe("Skip git hooks during creation (--no-verify). Default: false"),
         },
         async execute(args, ctx) {
           if (!(await isWorkTrunkInstalled())) {
@@ -409,15 +410,16 @@ Use this when starting work on a new feature branch.`,
           }
           
           try {
+            const flags = args.skipHooks ? ['--yes', '--no-verify'] : ['--yes']
             if (args.base) {
-              const result = await $`wt switch --create ${args.branch} --base=${args.base}`.quiet()
+              const result = await $`wt switch --create ${flags} ${args.branch} --base=${args.base}`.quiet()
               currentBranch = args.branch
               lastKnownBranch = args.branch
               updateStatus("💬")
               const baseInfo = args.base === "@" ? "current HEAD" : args.base
               return `Created and switched to branch: ${args.branch} (from ${baseInfo})\n${result.stdout.toString()}`
             } else {
-              const result = await $`wt switch --create ${args.branch}`.quiet()
+              const result = await $`wt switch --create ${flags} ${args.branch}`.quiet()
               currentBranch = args.branch
               lastKnownBranch = args.branch
               updateStatus("💬")
@@ -453,7 +455,7 @@ Use this to clean up worktrees when you're done with a branch. The plugin will a
           }
           
           try {
-            const result = await $`wt remove ${args.branch}`.quiet()
+            const result = await $`wt remove --yes ${args.branch}`.quiet()
             // If removing current worktree, clear currentBranch and refresh
             if (args.branch === "@" || args.branch === currentBranch) {
               currentBranch = null

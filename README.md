@@ -116,7 +116,15 @@ worktrunk-create({ branch: "feature/part2", base: "feature/part1" })
 
 // Create worktree for current branch
 worktrunk-create({ branch: "@" })
+
+// Create without running git hooks
+worktrunk-create({ branch: "feature/quick", skipHooks: true })
 ```
+
+**Parameters:**
+- `branch` - Branch name to create (use `@` for current branch)
+- `base` - (Optional) Base branch to create from (use `@` for current HEAD)
+- `skipHooks` - (Optional) Skip git hooks during creation (default: false)
 
 **Stacked branches:**
 - Use `base: "@"` to branch from current HEAD (enables incremental feature development)
