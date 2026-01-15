@@ -95,9 +95,11 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
     } catch (error) {
       // WorkTrunk might not be installed or configured - that's okay
       await client.app.log({
-        service: "opencode-worktrunk",
-        level: "debug",
-        message: `Failed to set status marker: ${error}`,
+        body: {
+          service: "opencode-worktrunk",
+          level: "debug",
+          message: `Failed to set status marker: ${error}`,
+        },
       })
     }
   }
@@ -124,9 +126,11 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
       lastKnownBranch = newBranch
       branchCache = null // Invalidate cache on branch change
       await client.app.log({
-        service: "opencode-worktrunk",
-        level: "info",
-        message: `Detected branch change: ${newBranch}`,
+        body: {
+          service: "opencode-worktrunk",
+          level: "info",
+          message: `Detected branch change: ${newBranch}`,
+        },
       })
     }
   }
@@ -151,16 +155,20 @@ const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
       }
 
       await client.app.log({
-        service: "opencode-worktrunk",
-        level: "info",
-        message: `WorkTrunk plugin initialized${currentBranch ? ` for branch: ${currentBranch}` : ""}`,
+        body: {
+          service: "opencode-worktrunk",
+          level: "info",
+          message: `WorkTrunk plugin initialized${currentBranch ? ` for branch: ${currentBranch}` : ""}`,
+        },
       })
     } catch (error) {
       // Initialization failed, plugin will work without branch tracking
       await client.app.log({
-        service: "opencode-worktrunk",
-        level: "warn",
-        message: `WorkTrunk plugin init failed: ${error}`,
+        body: {
+          service: "opencode-worktrunk",
+          level: "warn",
+          message: `WorkTrunk plugin init failed: ${error}`,
+        },
       })
     }
   }, 100)
@@ -352,7 +360,7 @@ The plugin automatically manages status markers, but this tool allows manual con
             
             // Handle shortcuts and defaults
             if (!targetBranch || targetBranch === "@") {
-              targetBranch = await getCurrentBranch()
+              targetBranch = await getCurrentBranch() ?? undefined
               if (!targetBranch) {
                 return "Not in a git repository or no branch detected.\n\nTroubleshooting:\n- Ensure you're in a git repository: git rev-parse --git-dir\n- Check you're on a branch (not detached HEAD): git branch"
               }
